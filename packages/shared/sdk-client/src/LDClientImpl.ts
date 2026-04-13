@@ -381,14 +381,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       return { status: 'error', error: new Error('Identify called before start') };
     }
 
-    let effectiveOptions = identifyOptions;
-    if (this._requiresStart && identifyOptions?.sheddable === undefined) {
-      effectiveOptions = { ...identifyOptions, sheddable: true };
-    }
-
-    const identifyTimeout = effectiveOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
-    const noTimeout =
-      effectiveOptions?.timeout === undefined && effectiveOptions?.noTimeout === true;
+    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
+    const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
     // When noTimeout is specified, and a timeout is not specified, then this condition cannot
     // be encountered. (Our default would need to be greater)
@@ -410,7 +404,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             }
             const checkedContext = Context.fromLDContext(context);
             if (checkedContext.valid) {
-              const afterIdentify = this._hookRunner.identify(context, effectiveOptions?.timeout);
+              const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
               return {
                 context,
                 checkedContext,
@@ -443,7 +437,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               identifyResolve,
               identifyReject,
               checkedContext,
-              effectiveOptions,
+              identifyOptions,
             );
 
             return identifyPromise;
@@ -458,7 +452,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             }
           },
         },
-        effectiveOptions?.sheddable ?? false,
+        identifyOptions?.sheddable ?? false,
       )
       .then((res) => {
         if (res.status === 'error') {
